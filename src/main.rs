@@ -55,7 +55,7 @@ struct IndiUI {
 impl IndiUI {
     fn new() -> Self {
         Self {
-            binaries: indi_ui::fetch_indi_binaries(),
+            binaries: indiserver_ui::fetch_indi_binaries(),
             filter: String::new(),
             server_on: false,
             server_on_text: String::from("\n  Stop INDI server  \n"),
@@ -151,7 +151,7 @@ impl eframe::App for IndiUI {
                             }
 
                             if !to_start.is_empty() {
-                                match indi_ui::start_indi(to_start) {
+                                match indiserver_ui::start_indi(to_start) {
                                     Ok(handle) => {
                                         self.indi_proc = Some(handle);
                                         self.server_on = !self.server_on;
