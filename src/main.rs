@@ -1,9 +1,17 @@
 use eframe::egui;
 
+const ICON: &[u8; 15473] = include_bytes!("../assets/indi_logo.png");
+
 fn main() -> Result<(), eframe::Error> {
-    //env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    let icon = image::load_from_memory(ICON).unwrap().to_rgba8();
+    let (i_width, i_height) = icon.dimensions();
     let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(320.0, 240.0)),
+        initial_window_size: Some(egui::vec2(280.0, 450.0)),
+        icon_data: Some(eframe::IconData {
+            rgba: icon.into_raw(),
+            width: i_width,
+            height: i_height,
+        }),
         ..Default::default()
     };
     eframe::run_native(
@@ -29,10 +37,12 @@ pub fn toggle_ui(ui: &mut egui::Ui, on: &mut bool) -> egui::Response {
         let visuals = ui.style().interact_selectable(&response, *on);
         let rect = rect.expand(visuals.expansion);
         let radius = 0.5 * rect.height();
-        ui.painter().rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
+        ui.painter()
+            .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
         let circle_x = egui::lerp((rect.left() + radius)..=(rect.right() - radius), how_on);
         let center = egui::pos2(circle_x, rect.center().y);
-        ui.painter().circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
+        ui.painter()
+            .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
     }
 
     response
@@ -80,13 +90,13 @@ impl eframe::App for IndiUI {
                 });
                 ui.separator();
             });
-	    
+
             ui.horizontal(|ui| {
                 let name_label = ui.label("Filter: ");
                 ui.text_edit_singleline(&mut self.filter)
                     .labelled_by(name_label.id);
             });
-	    
+
             ui.separator();
 
             ui.vertical_centered(|ui| {
