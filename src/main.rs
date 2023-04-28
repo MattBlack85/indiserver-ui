@@ -22,7 +22,7 @@ fn main() -> Result<(), eframe::Error> {
 }
 
 pub fn toggle_ui(ui: &mut egui::Ui, on: &mut bool) -> egui::Response {
-    let desired_size = ui.spacing().interact_size.y * egui::vec2(2.0, 1.0);
+    let desired_size = ui.spacing().interact_size.y * egui::vec2(2.2, 1.0);
     let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
 
     if response.clicked() {
@@ -113,9 +113,12 @@ impl eframe::App for IndiUI {
                                     if &self.filter == "" || el.0.contains(&self.filter) {
                                         ui.label(el.0.to_owned());
                                         ui.horizontal(|ui| {
-                                            ui.columns(2, |columns| {
-                                                columns[0].add(toggle(&mut el.2));
-                                            });
+                                            ui.with_layout(
+                                                egui::Layout::right_to_left(egui::Align::RIGHT),
+                                                |ui| {
+                                                    ui.add(toggle(&mut el.2));
+                                                },
+                                            );
                                         });
                                         ui.end_row();
                                     };
