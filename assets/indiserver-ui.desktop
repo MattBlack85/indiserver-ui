@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=INDI server GUI
+Type=Application
+Exec=/usr/sbin/indiserver-ui
+Icon=indi_logo.png
+Categories=Astronomy;
+Comment=Start INDI server with the drivers you use
