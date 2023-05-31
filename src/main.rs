@@ -3,6 +3,10 @@ use eframe::egui;
 const ICON: &[u8; 15473] = include_bytes!("../assets/indi_logo.png");
 
 fn main() -> Result<(), eframe::Error> {
+    // let's make sure the needed file/dirs for the config are there
+    indiserver_ui::ensure_config_exists();
+    let _conf = indiserver_ui::Config::new();
+
     let icon = image::load_from_memory(ICON).unwrap().to_rgba8();
     let (i_width, i_height) = icon.dimensions();
     let options = eframe::NativeOptions {
@@ -60,18 +64,32 @@ struct IndiUI {
     server_off_text: String,
     indi_proc: Option<std::process::Child>,
     can_start_indi: bool,
+    config: indiserver_ui::Config,
 }
 
 impl IndiUI {
     fn new() -> Self {
+        let conf = indiserver_ui::Config::new();
+        let drivers = conf.drivers();
         Self {
-            binaries: indiserver_ui::fetch_indi_binaries(),
+            binaries: {
+                let mut available_drivers = indiserver_ui::fetch_indi_binaries();
+
+                for driver in available_drivers.iter_mut() {
+                    if drivers.contains(&driver.1) {
+                        driver.2 = true;
+                    }
+                }
+
+                available_drivers
+            },
             filter: String::new(),
             server_on: false,
             server_on_text: String::from("\n  Stop INDI server  \n"),
             server_off_text: String::from("\n  Start INDI server  \n"),
             indi_proc: None,
             can_start_indi: false,
+            config: conf,
         }
     }
 }
@@ -110,6 +128,8 @@ impl eframe::App for IndiUI {
                             .show(ui, |ui| {
                                 let mut global_status = 0;
                                 for el in self.binaries.iter_mut() {
+                                    // Check now if we need to display the item or not, only items
+                                    // that match the filters are shown on the UI
                                     if &self.filter == "" || el.0.contains(&self.filter) {
                                         ui.label(el.0.to_owned());
                                         ui.horizontal(|ui| {
@@ -156,6 +176,7 @@ impl eframe::App for IndiUI {
                             };
                         }
                         false => {
+                            // Which drivers we want to start
                             let mut to_start = Vec::new();
                             for (_name, path, status) in self.binaries.clone().into_iter() {
                                 if status {
@@ -164,6 +185,10 @@ impl eframe::App for IndiUI {
                             }
 
                             if !to_start.is_empty() {
+                                // Save the driver config in the config file
+                                self.config.add_drivers_to_config(&to_start);
+
+                                // Now start INDI server
                                 match indiserver_ui::start_indi(to_start) {
                                     Ok(handle) => {
                                         self.indi_proc = Some(handle);
